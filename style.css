@@ -1,0 +1,224 @@
+@font-face {
+	font-family: 'RopaSans';
+	src: url('images/RopaSans-Regular.ttf');
+}
+
+
+html{
+	height: 100%;
+}
+
+body{
+	font-family: 'RopaSans';
+	background-color: #dedede;
+	/*background: -webkit-gradient(linear, left top, left bottom, from(#fdfdfd), to(#989898));
+	background: -moz-linear-gradient(top,  #fdfdfd,  #989898);*/
+	background-image: url(images/bg.jpg); 
+	background-repeat: no-repeat;
+	background-size: 100%;
+}
+
+#playerName {
+  position: fixed;
+  width: 150px;
+	background-color: rgba(250, 250, 250, 0.9);
+	-moz-box-shadow: 0 0 5px #888;
+	-webkit-box-shadow: 0 0 5px#888;
+	box-shadow: 0 0 5px #888;
+  padding: 20px;
+  text-align: center;
+  top: 40%;
+  left: 40%;
+  z-index: 2000;
+}
+
+#header {
+	position: absolute;
+	left: 360px;
+	top: 45px;
+	width: 250px;
+	height: 40px;
+	background-image: url(images/header.png);
+	z-index: 1000;
+}
+
+#game {
+	position: absolute;
+	left: 50px;
+	top: 80px;
+	width: 550px;
+	height: 280px;
+	background-color: rgba(250, 250, 250, 0.8);
+	-moz-box-shadow: 0 0 5px #888;
+	-webkit-box-shadow: 0 0 5px#888;
+	box-shadow: 0 0 5px #888;
+}
+
+#set_game {
+	position: absolute;
+	left: 50px;
+	top: 370px;
+	width: 550px;
+	heigth: auto;
+	background-color: rgba(250, 250, 250, 0.8);
+	-moz-box-shadow: 0 0 5px #888;
+	-webkit-box-shadow: 0 0 5px#888;
+	box-shadow: 0 0 5px #888;
+}	
+
+#message{
+	position: absolute;
+	width: 250px;
+	height: 30px;
+	left: 50px;
+	top: 30px;
+	text-align:center;
+	background-color: rgba(250, 250, 250, 0.8);
+	padding-top: 10px;
+	box-shadow: 0 0 5px #888;
+	-moz-box-shadow: 0 0 5px #888;
+	-webkit-box-shadow: 0 0 5px#888;
+}
+
+#game table {
+	margin-top: 30px;
+	margin-left: 50px;
+	margin-bottom: 30px;
+}
+
+#playarea_0, #playarea_1 {
+	width: 210px;
+	heigth: 211px;
+	border-top: 1px solid black;
+	border-left: 1px solid black;
+}
+
+a {
+	float: left;
+}
+
+#playarea_0 img, #playarea_1 img {
+	width: 20px;
+	height: 20px;
+	border-bottom: 1px solid black;
+	border-right: 1px solid black;
+}
+
+label {
+	display: block;
+	width: 120px;
+	float: left;
+}
+
+input {
+	width: 120px;
+	font-size: 14px;
+	font-family: 'RopaSans';
+}
+
+button {
+	font-family: 'RopaSans';
+	font-size: 16px;
+}
+
+h2 {
+	padding-left: 10px;
+	text-align: center;
+}
+
+h4 {
+	padding-left: 20px;
+	padding-top: 0;
+	padding-bottom: 0
+	margin: 0;
+}
+
+p {
+	padding: 10px;
+	text-align: center;
+}
+
+
+#console {
+    position: absolute;
+	background-color: rgba(250, 250, 250, 0.8);
+    width: 405px;
+    height: 484px;
+    left: 270px;
+    top: 70px;
+    padding: 3px;
+	box-shadow: 0 0 5px #888;
+	-moz-box-shadow: 0 0 5px #888;
+	-webkit-box-shadow: 0 0 5px#888;
+}
+
+#messagebox {
+    background: rgba(15, 15, 15, 0.8);
+    color: #fdfdfd;
+    height: 85%;
+    padding: 5px;
+    overflow: auto;
+}
+
+#playerconsole {
+    position: absolute;
+	background-color: rgba(250, 250, 250, 0.8);
+    width: 200px;
+    height: 490px;
+    left: 58px;
+    top: 70px;
+    overflow: auto;
+	box-shadow: 0 0 5px #888;
+	-moz-box-shadow: 0 0 5px #888;
+	-webkit-box-shadow: 0 0 5px#888;
+}
+
+#connect{
+	position: absolute;
+	left: 630px;
+	display: none;
+}
+
+#playernamebox {
+	position: absolute;
+	top: 10px;
+	left: 270px;
+	width: 390px;
+	height: auto;
+	padding: 15px 0 15px 20px;
+	background-color: rgba(250, 250, 250, 0.8);
+	box-shadow: 0 0 5px #888;
+	-moz-box-shadow: 0 0 5px #888;
+	-webkit-box-shadow: 0 0 5px#888;
+}
+
+#button{
+	position: absolute;
+	width: 200px;
+	height: 50px;
+	left: 60px;
+	top: 10px;
+}
+
+audio {
+	position: fixed;
+	bottom: 15px;
+	left: 50px;
+	width: 550px;
+}
+
+
+#footer {
+	position: fixed;
+	bottom: 2px;
+	right: 2px;
+	width: 225px;
+	height: 50px;
+	background-image: url(images/footer.png);
+}
+
+#footer a {
+	display: block;
+	width: 225px;
+	height: 50px;
+}

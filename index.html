@@ -1,0 +1,632 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <script type="text/javascript" src="http://code.jquery.com/jquery-1.4.4.min.js"></script>
+        <script type="text/javascript" src="http://localhost:8080/socket.io/socket.io.js"></script>
+        <script type="text/javascript" src="player.js"></script>
+        <link rel="stylesheet" type="text/css" href="style.css" media="all">
+<title>Battle Ships</title>
+<script type="text/javascript">
+socket.emit('resetSpecialIP');
+  
+$(document).ready(function(){
+	if ( $("input[name=currentGameMode]").val() == 0)
+	{
+		$("#playarea_0").hide();
+		$("#set_game").show();			
+	}
+	else
+	{
+		$("#playarea_1").show();
+		$("#set_game").hide();
+	}
+	
+	$("input[name=beginButton]").click(function() {
+		document.getElementById("currentGameMode").value = 1;
+		$("#playarea_0").show();
+		$("#set_game").hide();		
+	});
+  
+  $('#header').hide();
+  $('#mainblock').hide();
+  
+  $('#playerName').submit(function() {
+    myName = $("input", this).val();
+    
+	if(myName == "")
+	{
+		$('#error').html("<font color='red'>Bitte Namen angeben!</font>");
+		return false;
+	}
+	else
+	{
+		$('#playernamebox').html("<b>Spielername:</b> " + myName);
+		$('#playerName').fadeOut('slow');
+		$('#connect').fadeIn('slow');
+		return false;
+	}
+  });
+  
+}); //for jquery	
+</script>
+
+</head>
+
+<body>
+    <!-- is setting with javascript in case of swichting mode for hiding not needed divs-->
+	<input type="hidden" name="currentGameMode"  id="currentGameMode" value="0" />
+ 
+<script type="text/javascript">
+	//define arrays
+	var DESTROYED_FIELDS = 0;
+	var LAST_X = 0;
+	var LAST_Y = 0;
+	var ALLOWED_TO_SHOOT = false;
+	var area = new Array(100);
+	var area_hits = new Array(100);
+	var ships = new Array(10);
+	var ships_hits = new Array(10);
+  var startInterval;
+  var message;
+
+
+function msgInterval()
+{
+  socket.emit('requestToEnemy', message, enemyIP);
+}
+
+	//fill arrays
+	//area = 99 means = its empty, no ship in it, otherwise ship-position in ship-array
+	for(var i = 0; i < 100; i++)
+	{
+		area[i] = 99;
+		area_hits[i] = 0;
+		ships_hits[i]= 0;
+	}
+	
+	//set ships
+	setShips();
+	
+	//function for draw planes
+	function drawPlane(player)
+	{
+		var counter = 0;
+		
+		if(player == 0)
+		{
+			for(var i = 0; i < area.length; i++)
+			{
+				document.write('<a href="#" onclick="shoot('+counter+')"><img src="images/water.png" id="field_'+counter+'"/></a>');
+				counter++;
+			}
+		}
+		else
+		{
+			counter = 100;
+			for(var i = 0; i < area.length; i++)
+			{				
+				document.write('<img src="images/water.png" id="own_field_'+counter+'"/>');
+				counter++;
+			}
+			
+			var shipchange = 0;
+			for(var j = 0; j < ships.length; j++)
+			{
+				//direction for pictures
+				if(ships[j][0] + 1 == ships[j][1])
+				{
+					var lastfield =  ships[j].length - 1;					
+					var field_start = ships[j][0] + 100;
+					var field_end = ships[j][lastfield] + 100;
+					
+					document.images[field_start].src  = "images/ship_horz_left.png";
+					document.images[field_end].src  = "images/ship_horz_right.png";	
+					area[field_start] = 1;
+					area[field_end] = 1;				
+				}
+				else
+				{
+					var lastfield =  ships[j].length - 1;
+					var field_start = ships[j][0] + 100;
+					var field_end = ships[j][lastfield] + 100;
+					
+					document.images[field_start].src  = "images/ship_vert_up.png";
+					document.images[field_end].src  = "images/ship_vert_down.png";	
+					area[field_start] = 1;
+					area[field_end] = 1;	
+				}
+					
+				for(var k = 1; k < ships[j].length - 1; k++)
+				{
+					var field = ships[j][k] + 100;
+					area[field] = 1;
+					
+					if(shipchange % 2 == 0)
+						document.images[field].src = "images/ship.png";
+					else
+						document.images[field].src = "images/ship1.png";					
+					
+					shipchange++;
+				}
+			}
+		}
+	}
+	
+	function shoot(field)
+	{	
+		if(!ALLOWED_TO_SHOOT)
+			return;
+			
+		//alert(field);
+		if(area_hits[field] == 1)
+		{
+			alert("You already shot at this field!");
+			return;
+		}
+		else
+		{
+			ALLOWED_TO_SHOOT = false;
+			area_hits[field] = 1;
+		
+			//calculate right format (x/y)
+			var fieldStr = String(field);
+			var posX = 0;
+			var posY = 0;	
+			
+			if(field < 10)
+			{
+				posX = field;
+				posY = 0;
+			}
+			else
+			{
+				posX = fieldStr.substr(1,1);
+				posY = fieldStr.substr(0,1);
+			}
+
+			LAST_X = posX;
+			LAST_Y = posY;
+			//hier senden des schusses
+			//x (posX) und y (pos Y) schon ausgerechnet
+      message = 'mmtships:shot:' + posX + ':' + posY + ':' + msgCounter;
+      socket.emit('requestToEnemy', message, enemyIP);
+      startInterval = setInterval("msgInterval()",2000);
+      socket.emit('continueListening');
+		}
+	}
+	
+	function getShootAnswer(hit)
+	{
+		var myCoords = String(LAST_Y) + String(LAST_X);
+		myCoords *= 1;
+		
+		if(hit)
+		{
+      socket.emit('stopListening');
+			ALLOWED_TO_SHOOT = true;
+			$('#message').replaceWith('<div id="message">getroffen, schieß noch mal</div>');
+			document.images[myCoords].src = "images/hit.png";				
+		}
+		else
+		{
+      socket.emit('stopListening');
+			ALLOWED_TO_SHOOT = false;
+			$('#message').replaceWith('<div id="message">daneben, Gegner ist drann</div>');
+			document.images[myCoords].src = "images/failed.png";
+      message = 'mmtships:nextturn:' + msgCounter;		
+      socket.emit('requestToEnemy', message, enemyIP);
+      startInterval = setInterval("msgInterval()", 2000);
+      socket.emit('continueListening');
+		}
+		
+	}
+	
+	function getShoot(x, y)
+	{
+			socket.emit('stopListening'); //blockt weitere Nachrichten
+	
+			var myCoords = String(y) + String(x);
+			myCoords *= 1;
+			//alert(myCoords);
+						
+			//die variable FIELD im area[FIELD] ersetzen durch die oben ausgerechneten koordinaten myCoords
+			if(area[myCoords] != 99)
+			{
+				ALLOWED_TO_SHOOT = false;
+				DESTROYED_FIELDS++;
+								
+				//treffer, bild auf meiner schiffe-map wird gewchselt
+				document.images[myCoords + 100].src = "images/fire.png";
+				
+				//schiffe-array für treffer updaten
+				var shipIndex = area[myCoords];
+
+				ships_hits[shipIndex] += 1;
+				
+				//schiff zerstört???
+				//laut protokoll nicht vorgesehen, bleibt für weiterentwicklung im code!!!!
+				/*if(ships_hits[shipIndex] == ships[shipIndex].length)
+				{
+					for(var i = 0; i < ships[shipIndex].length; i++)
+					{
+						field = ships[shipIndex][i];
+						document.images[myCoords+100].src="images/destroyed.png";
+					}
+					alert("One of your ships was destroyed!");
+				}*/
+				
+				//VERSENDEN: TREFFER(x,y)!!!!!
+				message = 'mmtships:hit:' + msgCounter;
+				socket.emit('requestToEnemy', message, enemyIP);
+        startInterval=setInterval("msgInterval()",2000);
+        socket.emit('continueListening'); //lässt Nachrichten wieder herein
+			}
+			else
+			{
+				ALLOWED_TO_SHOOT = true;
+				$('#message').replaceWith('<div id="message">Du bist dran</div>');
+				
+				//kein treffer: bildwechsel
+				document.images[myCoords + 100].src = "images/failed.png";
+				
+				
+				// VERSENDEN: KEIN TREFFER(x,y)
+        message = 'mmtships:miss:' + msgCounter;
+        socket.emit('requestToEnemy', message, enemyIP);
+        startInterval=setInterval("msgInterval()",2000);
+        socket.emit('continueListening'); //lässt Nachrichten wieder herein
+			}
+			
+			//kontrolle ob alle meine Schiffe versenkt sind
+			if( DESTROYED_FIELDS == 30 )
+			{
+				$('#message').replaceWith('<div id="message">Du hast verloren</div>');
+				//game end
+				clearInterval(startInterval);
+        
+        //VERSENDEN: ALL SHIPS DESTROYED
+				message = 'mmtships:allshipsdestroyed:' + msgCounter;
+				socket.emit('requestToEnemy', message, enemyIP);
+				startInterval=setInterval("msgInterval()",2000);
+			}
+	}
+	
+	//function to begin game
+	function beginGame()
+	{
+    var message = 'mmtships:positionsset' + ':' + msgCounter;
+    socket.emit('requestToEnemy', message, enemyIP);
+		//hier dem gegner die okay meldung senden
+		//wird aufgerufen wenn spieler auf "beginnen!"-Button klickt
+		
+	}
+	//function to set ships
+	// hier und vorallem in der getAllowedPosition bitte nichts ändern, sonst werden
+	// die Schiffe nicht mehr richtig gesetzt 
+	function setShips()
+	{
+		$('#message').replaceWith('<div id="message">Schiffe sind gesetzt</div>');
+		if(document.getElementById("currentGameMode").value == 1)
+		{
+			alert("Du hast die Seite aktualisiert, das Spiel wurde abgebrochen!");
+			return;
+		}
+				
+		var position = 0;
+		var direction = randomNumber(1,10);
+		var shiplength = 5;
+		var fields = new Array(5);
+		var shipsArrayIndex = 0;
+		
+		//set ships with 5 fields
+		//================================================
+		
+		//horizontal or vertical
+		if(direction <= 5)
+		{
+			//horizontal	
+			position = getAllowedPosition(shiplength, 0);
+			
+			for(var i = 0; i < shiplength; i++)
+			{
+				fields[i] = position;
+				area[position] = shipsArrayIndex;
+				position++;
+			}
+			
+			ships[shipsArrayIndex] = fields;
+			shipsArrayIndex++;
+			
+		}
+		else
+		{
+			//vertical
+			position = getAllowedPosition(shiplength, 1);
+
+			for(var i = 0; i < shiplength; i++)
+			{
+				fields[i] = position;
+				area[position] = shipsArrayIndex;
+				position += 10;
+			}
+			
+			ships[shipsArrayIndex] = fields;
+			shipsArrayIndex++;
+		}
+		
+		//set all ships with 4 fields
+		//=================================================
+		shiplength = 4;		
+		fields = new Array(4);
+		
+		for(var j = 0; j < 2; j++)
+		{
+			position = randomNumber(0, 99);
+			direction = randomNumber(1,10);			
+			
+			if(direction <= 5)
+			{
+				//horizontal	
+				position = getAllowedPosition(shiplength, 0);
+				
+				for(var i = 0; i < shiplength; i++)
+				{
+					fields[i] = position;
+					area[position] = shipsArrayIndex;
+					position++;
+				}
+				
+				ships[shipsArrayIndex] = fields;
+				shipsArrayIndex++;			
+			}
+			else 
+			{
+				//vertical
+				position = getAllowedPosition(shiplength, 1);
+	
+				for(var i = 0; i < shiplength; i++)
+				{
+					fields[i] = position;
+					area[position] = shipsArrayIndex;
+					position += 10;
+				}
+				
+				ships[shipsArrayIndex] = fields;
+				shipsArrayIndex++;
+			}
+			
+			fields = new Array(4);
+		}
+			
+		//set all ships with 3 fields
+		//=================================================
+		shiplength = 3;		
+		fields = new Array(3);
+		
+		for(var j = 0; j < 3; j++)
+		{
+			position = randomNumber(0, 99);
+			direction = randomNumber(1,10);			
+			
+			if(direction <= 5)
+			{
+				//horizontal	
+				position = getAllowedPosition(shiplength, 0);
+				
+				for(var i = 0; i < shiplength; i++)
+				{
+					fields[i] = position;
+					area[position] = shipsArrayIndex;
+					position++;
+				}
+				
+				ships[shipsArrayIndex] = fields;
+				shipsArrayIndex++;			
+			}
+			else 
+			{
+				//vertical
+				position = getAllowedPosition(shiplength, 1);
+	
+				for(var i = 0; i < shiplength; i++)
+				{
+					fields[i] = position;
+					area[position] = shipsArrayIndex;
+					position += 10;
+				}
+				
+				ships[shipsArrayIndex] = fields;
+				shipsArrayIndex++;
+			}
+			
+			fields = new Array(3);
+		}
+	
+		
+		//set all ships with 2 fields
+		//=================================================
+		shiplength = 2;		
+		fields = new Array(2);
+		
+		for(var j = 0; j < 4; j++)
+		{
+			position = randomNumber(0, 99);
+			direction = randomNumber(1,10);			
+			
+			if(direction <= 5)
+			{
+				//horizontal	
+				position = getAllowedPosition(shiplength, 0);
+				
+				for(var i = 0; i < shiplength; i++)
+				{
+					fields[i] = position;
+					area[position] = shipsArrayIndex;
+					position++;
+				}
+				
+				ships[shipsArrayIndex] = fields;
+				shipsArrayIndex++;			
+			}
+			else 
+			{
+				//vertical
+				position = getAllowedPosition(shiplength, 1);
+	
+				for(var i = 0; i < shiplength; i++)
+				{
+					fields[i] = position;
+					area[position] = shipsArrayIndex;
+					position += 10;
+				}
+				
+				ships[shipsArrayIndex] = fields;
+				shipsArrayIndex++;
+			}
+			
+			fields = new Array(2);
+		}
+
+		
+	}
+	
+	function getAllowedPosition(shiplength, direction)
+	{
+		var position = randomNumber(0, 99);
+		var ok = false;
+		
+		if(direction == 0)
+		{
+			//horizontal
+			while(!ok)
+			{
+				position = randomNumber(0,99);
+				
+				while((position % 10) + shiplength > 10 )
+				{
+					position = randomNumber(0,99);
+				}
+				
+				if( (position > 0 && area[position - 1] != 99) || (position < 99 && area[position + shiplength] != 99))
+				{
+					ok = false;
+					continue;
+				}	
+					
+				for(var i = 0; i < shiplength; i++)
+				{
+					if(area[position + i] != 99)
+					{
+						ok = false;
+						break;
+					}
+					else
+						ok = true;
+						
+				}
+				
+			}
+			//alert(position+" | "+ok);
+			return position;
+			
+		}
+		else
+		{
+			//vertical
+			while(!ok)
+			{
+				position = randomNumber(0,99);
+				
+				while( (position  + shiplength*10) > 100 + (position % 10) )
+				{
+					position = randomNumber(0,99);
+				}
+
+				if( (position > 9 && area[position - 10] != 99) || (position < 90 && area[position + shiplength*10] != 99))
+				{
+					ok = false;
+					continue;
+				}
+				
+				for(var i = 0; i < shiplength; i++)
+				{
+					if(area[position + (i * 10)] != 99)
+					{
+						ok = false;
+						break;
+					}
+					else
+						ok = true;
+
+
+				}
+			}
+			
+			//alert(position+" | "+ok);
+			return position;
+		}
+	}
+	
+	function randomNumber(_min, _max)
+	{
+		return Math.floor(Math.random() * (_max - _min)) + _min;
+	}
+	
+</script>
+<form id="playerName">
+<br/>
+  <input type="text" placeholder="Playername" />
+  <br/><br/>
+  <input type="submit" value="Go" />
+  <br/><br/>
+  <span id="error"></span>
+</form>
+<div id="header"></div>
+<div id="mainblock">
+	<div id="message">Aktuelle Meldungen</div>
+	<div id="game">
+		<table>
+			<tr>
+				<td><div id="playarea_0"><script>drawPlane(0)</script></div></td>
+		        <td><div id="playarea_1"><script>drawPlane(1)</script></div></td>
+		    </tr>
+		</table>
+	</div>
+	<div id="set_game">
+	    <h2>Captain!?</h2>
+	    <p>
+		Deine Schiffe wurden automatisch gesetzt, hoher Wellengang<br/>
+        ermöglicht leider kein neues Setzen mehr Captain!!!
+	    </p>
+	    <p>
+        Let the Battle begin!<br/>
+	    <input class="button_top_margin" id="robiButton" type="button" name="beginButton" onclick="beginGame()" value="Beginnen!"/>
+	   </p>
+	</div>
+</div>
+
+<div id='connect'>
+      <button id="button">spielanfrage an alle</button>
+      <div id="playernamebox"></div>
+      <div id="console"><h4>Who is sending</h4><div id="messagebox"></div></div>
+      <div id="playerconsole"><h4>Players online</h4><div id="players"></div></div>
+      <!--
+      <p class="test">positionsset</p>
+      <p class="test">okyourturn</p>
+      <p class="test">shot</p>
+      <p class="test">hit</p>
+      <p class="test">miss</p>
+      <p class="test">nextturn</p>
+      <p class="test">allShipsdestroyed</p>
+      -->
+</div>
+<div id="footer"><a href="http://www.multimediatechnology.at" target="_blank"></a></div>
+
+<audio controls="controls" autoplay="autoplay" loop="loop">
+  <source src="bf3_soundtrack.ogg" type="audio/ogg" />
+  <source src="bf3_soundtrack.mp3" type="audio/mp3" />
+  Your browser does not support the audio tag.
+</audio> 
+</body>
+</html>

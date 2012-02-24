@@ -1,0 +1,204 @@
+RFC
+
+Konventionen:
+Variablen werden mit {} gekennzeichnet. 
+z.B.: {varName}
+Wobei die variable z.B.: Darian wäre
+
+Ohne {} und in kursiver Schrift sind es konkrete Werte.
+mmtships:{PlayerName}
+
+Variablen und konkrete Werte in Englisch(GB).
+
+ein doppelter Backslash // bedeutet Kommentar
+
+Fixe Spielparameter:
+Spielfeldgröße festgelegt auf 10x10
+Schiffanzahl festgelegt auf 10
+
+Schiffgrößen festgelegt auf
+    1x5er
+    2x4er
+    3x3er
+    4x2er
+    
+
+Requirements:
+
+Ein Kommando wird einfach als String geschickt und von den Clients geparst.
+die übertragenen Daten sind im ascii format kodiert (keine unicode!)
+
+
+Spiel-ID festgelegt auf: mmtships
+Erlaubte Zeichen für Spielername: a-z, A-Z und 0-9
+
+Port festgelegt auf: 1234
+
+Verbindungsanfrage:
+
+Broadcast über UDP ins Netz. 
+
+Format für Verbindungsanfrage:
+mmtships:{PlayerName}
+
+Die IP-Adresse befindet sich im IP-Header und muss somit nicht mitgeschickt werden!
+
+Nach Broadcast wird Spieler in den Spielerlisten der anderen dargestellt.
+Sobald Broadcasts anderer Spieler aus dem Netzwerk eingehen, werden diese in der eigenen Spielerliste dargestellt.
+
+
+Verbindungsantwort:
+
+mmtships:{PlayerName}:{SpielerStatus}
+IP-Adresse wieder im Header (siehe oben)
+
+Möglich Werte für den Spielerstatus:
+playing oder waiting
+
+
+Konkrete Spielanfrage:
+
+Nach senden einer Spielanfrage an eine gewünschte IP wird der eigene Spielerstatus auf playing geändert.
+
+mmtships:{PlayerName}:startgame
+
+Um die Spielanfrage zu bestätigen hat der andere Client 30 Sekunden Zeit.
+
+
+Konkrete Antwort:
+
+declined wird zurückgeschickt, wenn z.B.: Cancel gedrückt wurde
+mmtships:declined
+
+Bei Annahme wird Spielerstatus auf playing gesetzt und mmtships:accepted gesendet.
+
+
+Ständige Überprüfung der Verbindung während des Spiels über Statusmeldung:
+
+mmtships:alive
+
+Es wird regelmäßig alle 2 Sek diese Statusmeldung an den Spielgegner geschickt.
+
+// Timeout sollte implementiert werden: z.B.: 20 Sekunden
+
+
+Abfangen/Vermeiden von Paketverlust:
+
+Jeder Befehl innerhalb einer offenen Partie hat eine fortlaufende ID beginnend bei 0.
+Empfehlung: Inkrement = 1!
+
+Jede Sekunde wird der Befehl erneunt verschickt, bis eine Antwort (ebenfalls mit fortlaufender ID immer wieder geschickt) des Gegenspielers eintrifft. Die Antwort des Spielers ist gleichzeit der nächste Befehl. 
+
+Ein Beispiel:
+Client A sendet einen Schuss mit einer Koordinate. -> immer wieder
+Client B erhält den Schuss, checkt die IDs und ignoriert die weiteren redundanten Befehle
+Client B schickt zurück, dass der Schuss erhalten wurde und ob es sich um einen Treffen oder um eine Verfehlung handelt. Dieser Befehl wird wiederholt geschickt.
+Client A erhält die Antwort und kann dem User die entsprechende Darstellung liefern.
+Client B überlegt und überlegt und überlegt... und FEUERT!
+wieder von vorne...
+
+
+Spielablauf:
+
+Die Clients setzen die Positionen. Wenn alle Positionen gesetzt sind wird mmtships:positionsset:{ID} gesendet solange bis eine Antwort kommt.
+
+Wenn der Client mmtships:positionsset:{ID} erhält bevor er selbst fertig ist, sendet er mmtships:okyourturn:{ID} solange bis eine Antwort kommt.
+
+Danach beginnt der erste Spieler mit dem ersten Schuss.
+
+Beispiel:
+
+In diesem Beispiel ist der Spieler 1 jener der als erster mit dem Setzen der Schiffe fertig ist und daher später mit dem ersten Schuss beginnen darf!
+
+	Spieler 1 ist mit dem setzten der Schiffe fertig und sendet:
+
+	Spieler1 sendet:     mmtships:positionsset:0           <--- dieser Befehl wird auch wie der Shot befehl solange gesendet bis eine Antwort kommt
+	Spieler1 sendet:     mmtships:positionsset:0
+	Spieler1 sendet:     mmtships:positionsset:0
+	.
+	.
+	.
+
+	Wenn Spieler 2 nun mit dem setzen der Schiffe fertig ist sendet er die Antwort:
+
+	Spieler2 antwortet:  mmtships:okyourturn:1             <--- man beachte hier beginnt bereits der Spaß mit den fortlaufenden IDs
+	Spieler2 antwortet:  mmtships:okyourturn:1 
+	Spieler2 antwortet:  mmtships:okyourturn:1
+	.
+	.
+	.
+
+	Erhält nun Spieler1 die Nachricht mmtships:okyourturn:1 beginnt er gleich mit dem ersten Schuss und die Schlacht beginnt.
+
+
+	mmtships:shot:5:3:2                <--- 2 ist hier die ID
+	mmtships:shot:5:3:2                <--- 2 ist hier die ID
+	mmtships:shot:5:3:2                <--- 2 ist hier die ID
+	mmtships:shot:5:3:2                <--- 2 ist hier die ID
+	.
+	.
+	.
+
+nun folgt die übliche Reihenfolge mit miss oder hit und nexturn.
+
+
+
+Sonderfall:
+Wenn ein Client der schon positionsset gesendet hat vor dem okyourturn des anderen ebenfalls ein positionsset erhält erkennt er dies clientseitig. 
+Der Spieler der zu der Partie eingeladen wurde gibt verpflichtend klein bei. Er beendet das senden von mmtships:positionsset:{ID} und sendet stattdessen
+mmtships:okyourturn:{ID}. Danach beginnt der Eröffner mit dem ersten Schuss.
+
+
+Hier wieder ein kurzes Beispiel in dem davon ausgeganen wird das Spieler1 der Eröffner ist:
+
+
+	Spieler1 sendet:     mmtships:positionsset:0
+	Spieler1 sendet:     mmtships:positionsset:0
+	.
+	.
+
+	Spieler2 sendet:     mmtships:positionsset:0
+	Spieler2 sendet:     mmtships:positionsset:0
+	.
+	.
+
+	Konflikt!!!!!!!!!!!!!!
+
+	Spieler2 erkennt den Konflikt und gibt verpflichtend klein bei:
+
+	Spieler2 antwortet:  mmtships:okyourturn:1 
+	Spieler2 antwortet:  mmtships:okyourturn:1
+	.
+	.
+	.
+	danach beginnt Spieler1 mit dem ersten Schuss und die übliche Reihenfolge beginnt:
+
+	mmtships:shot:5:3:2                <--- 2 ist hier die ID
+	mmtships:shot:5:3:2                <--- 2 ist hier die ID
+	.
+	.
+
+
+
+
+
+Spielabfolge:
+
+siehe Wikipedia Spielfeldanordnung!
+Trifft man ein Schiff des Gegners darf man noch einmal schießen.
+
+Der Client der beginnt sendet:
+mmtships:shot:{indexX}:{indexY}:{ID} // indizes (Koordinaten der Kacheln) zwischen 0 und 9 zb: (2/5)
+Der Gegner überprüft die Koordinaten und antwortet mit mmtships:hit:{ID} oder mmtships:miss:{ID}
+Wenn ein hit erhalten wurde darf der Client den nächsten shot-Befehl senden. Erhält er ein miss sendet er mmtships:nextturn:{ID}
+Nun beginnt der Gegner mit seinem shot Befehl.
+
+
+Wurde bei einem Client die letztmögliche Position getroffen (alle Schiffe
+versenkt) wird anstatt eines hit oder miss mmtships:allshipsdestroyed:{ID}
+
+
+Nach der Partie:
+Die weiteren Schritte können von der Clientseite selbst entschieden und implementiert werden.
+
+
