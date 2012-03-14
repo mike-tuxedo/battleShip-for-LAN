@@ -11,6 +11,10 @@
 socket.emit('resetSpecialIP');
   
 $(document).ready(function(){
+	
+	//choose random background
+	$("body").css("background-image", "url(images/bg" + randomNumber(1, 6) + ".jpg)");
+	
 	if ( $("input[name=currentGameMode]").val() == 0)
 	{
 		$("#playarea_0").hide();
@@ -53,11 +57,12 @@ $(document).ready(function(){
 
 </head>
 
-<body>
+<body id="body">
     <!-- is setting with javascript in case of swichting mode for hiding not needed divs-->
 	<input type="hidden" name="currentGameMode"  id="currentGameMode" value="0" />
  
 <script type="text/javascript">
+
 	//define arrays
 	var DESTROYED_FIELDS = 0;
 	var LAST_X = 0;

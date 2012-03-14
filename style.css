@@ -13,7 +13,7 @@ body{
 	background-color: #dedede;
 	/*background: -webkit-gradient(linear, left top, left bottom, from(#fdfdfd), to(#989898));
 	background: -moz-linear-gradient(top,  #fdfdfd,  #989898);*/
-	background-image: url(images/bg.jpg); 
+	background-image: url(images/bg1.jpg); 
 	background-repeat: no-repeat;
 	background-size: 100%;
 }
