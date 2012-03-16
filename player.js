@@ -116,6 +116,12 @@ $(document).ready(function(){
   function timeOut()
   {
       alert('Gegner antwortet nicht');
+	  
+	  if(confirm("Spiel abbrechen?") )
+	  {
+      	window.location.href = "file:///C:/Sites/BattleShips/index.html";		  
+	  }
+	  
       myStatus = 'waiting';
       //socket.emit('resetSpecialIP');
   }
@@ -152,6 +158,7 @@ $(document).ready(function(){
     else if(yourturn.test(message))
     {
       ALLOWED_TO_SHOOT = true;
+	  $('#message').replaceWith('<div id="message">Du bist dran</div>');
       
       msgCounter = parseInt(msg.slice(msg.lastIndexOf(':')+1,msg.length));
       msgCounter++;
@@ -195,10 +202,14 @@ $(document).ready(function(){
       clearInterval(startInterval);
       
       alert('You WIN!!!');
+      	window.location.href = "file:///C:/Sites/BattleShips/index.html";	
     }
     else if(msg.slice(0, 17) == 'mmtships:nextturn')
     {
-      msgCounter = parseInt(msg.slice(msg.lastIndexOf(':')+1,msg.length));
+	  ALLOWED_TO_SHOOT = true;
+	  $('#message').replaceWith('<div id="message">Du bist dran</div>');
+      
+	  msgCounter = parseInt(msg.slice(msg.lastIndexOf(':')+1,msg.length));
       msgCounter++;
       
       clearInterval(startInterval);

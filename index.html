@@ -217,7 +217,7 @@ function msgInterval()
 		{
       socket.emit('stopListening');
 			ALLOWED_TO_SHOOT = false;
-			$('#message').replaceWith('<div id="message">daneben, Gegner ist drann</div>');
+			$('#message').replaceWith('<div id="message">daneben, Gegner ist dran</div>');
 			document.images[myCoords].src = "images/failed.png";
       message = 'mmtships:nextturn:' + msgCounter;		
       socket.emit('requestToEnemy', message, enemyIP);
@@ -269,8 +269,8 @@ function msgInterval()
 			}
 			else
 			{
-				ALLOWED_TO_SHOOT = true;
-				$('#message').replaceWith('<div id="message">Du bist dran</div>');
+				//ALLOWED_TO_SHOOT = true;
+				//$('#message').replaceWith('<div id="message">Du bist dran</div>');
 				
 				//kein treffer: bildwechsel
 				document.images[myCoords + 100].src = "images/failed.png";
@@ -278,6 +278,7 @@ function msgInterval()
 				
 				// VERSENDEN: KEIN TREFFER(x,y)
         message = 'mmtships:miss:' + msgCounter;
+		//msgCounter++;
         socket.emit('requestToEnemy', message, enemyIP);
         startInterval=setInterval("msgInterval()",2000);
         socket.emit('continueListening'); //lässt Nachrichten wieder herein

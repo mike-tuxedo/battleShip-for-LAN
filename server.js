@@ -8,7 +8,7 @@ var open = true;
 var dgram = require("dgram");
 var udpSocket = dgram.createSocket("udp4");
 
-udpSocket.setBroadcast(true);
+//udpSocket.setBroadcast(true);
 
 //TCP-Socket für interne Daten
 var http = require('http');
